@@ -1,0 +1,106 @@
+
+FitLink/
+│
+├── android/                       # Native Android project
+├── ios/                            # Native iOS project, if generated
+│
+├── src/
+│   ├── assets/
+│   │   ├── images/
+│   │   │   ├── logo.png
+│   │   │   └── onboarding.png
+│   │   ├── icons/
+│   │   └── fonts/
+│   │
+│   ├── components/                 # Reusable UI components
+│   │   ├── common/
+│   │   │   ├── AppButton.js
+│   │   │   ├── AppInput.js
+│   │   │   ├── AppHeader.js
+│   │   │   └── LoadingSpinner.js
+│   │   ├── workout/
+│   │   │   ├── WorkoutCard.js
+│   │   │   ├── ExerciseCard.js
+│   │   │   └── SetRow.js
+│   │   └── navigation/
+│   │       └── FloatingMenu.js
+│   │
+│   ├── screens/
+│   │   ├── auth/
+│   │   │   ├── SplashScreen.js
+│   │   │   ├── LoginScreen.js
+│   │   │   └── SignupScreen.js
+│   │   │
+│   │   ├── home/
+│   │   │   └── HomeScreen.js
+│   │   │
+│   │   ├── workouts/
+│   │   │   ├── WorkoutsScreen.js
+│   │   │   ├── CreateRoutineScreen.js
+│   │   │   ├── RoutineDetailsScreen.js
+│   │   │   └── LogWorkoutScreen.js
+│   │   │
+│   │   ├── history/
+│   │   │   ├── HistoryScreen.js
+│   │   │   └── WorkoutDetailsScreen.js
+│   │   │
+│   │   └── profile/
+│   │       └── ProfileScreen.js
+│   │
+│   ├── navigation/
+│   │   ├── RootNavigator.js
+│   │   ├── AuthNavigator.js
+│   │   ├── MainTabNavigator.js
+│   │   └── WorkoutNavigator.js
+│   │
+│   ├── services/
+│   │   ├── api.js                  # Axios instance and base URL
+│   │   ├── authService.js
+│   │   ├── workoutService.js
+│   │   ├── routineService.js
+│   │   └── historyService.js
+│   │
+│   ├── context/
+│   │   └── AuthContext.js          # Authentication state
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   └── useWorkout.js
+│   │
+│   ├── storage/
+│   │   └── tokenStorage.js         # AsyncStorage helpers
+│   │
+│   ├── constants/
+│   │   ├── colors.js
+│   │   ├── dimensions.js
+│   │   └── config.js
+│   │
+│   ├── utils/
+│   │   ├── formatDate.js
+│   │   └── validators.js
+│   │
+│   └── styles/
+│       └── globalStyles.js
+│
+├── App.js
+├── index.js
+├── package.json
+├── app.json
+└── .gitignore
+file:///C:/Users/Asus/Downloads/fitlink_30_day_ui_checklist.html
+
+src/
+├── navigation/
+│   ├── AuthNavigator.js
+│   ├── AppTabs.js
+│   └── RootNavigator.js
+├── screens/
+│   ├── auth/
+│   │   ├── LoginScreen.js
+│   │   └── SignupScreen.js
+│   └── main/
+│       ├── HomeScreen.js
+│       ├── WorkoutsScreen.js
+│       ├── HistoryScreen.js
+│       └── ProfileScreen.js
+App.tsx

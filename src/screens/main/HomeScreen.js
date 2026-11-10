@@ -9,7 +9,13 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-
+import { useState } from 'react';
+import {
+  // ScrollView,
+  RefreshControl,
+} from 'react-native';
+// import API from '../../api/api'; // Adjust the import path as necessaryR
+import * as Keychain from 'react-native-keychain';
 const recentWorkouts = [
   {
     id: '1',
@@ -34,7 +40,22 @@ export default function HomeScreen({ navigation }) {
   const userName = 'Athlete';
   const hasCompletedWorkoutToday = true;
   // const hasRecentWorkouts = recentWorkouts.length > 0;
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      // Call your API to reload screen data here
+      
+      setRefreshing(false);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const hasRecentWorkouts = false;
+    const [refreshing, setRefreshing] = useState(false);
 const weeklyActivity = [
   { day: 'Thu', completed: true },
   { day: 'Fri', completed: false },
@@ -58,6 +79,15 @@ const weeklyGoal = 5;
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+          refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                      colors={['#2563EB']}
+                      progressBackgroundColor="#FFFFFF"
+                      size="default"
+                    />
+                  }
       >
         {/* Greeting and profile avatar */}
         <View style={styles.header}>

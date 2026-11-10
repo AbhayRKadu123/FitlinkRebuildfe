@@ -2,7 +2,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-
+import workoutsnavigation from './workoutsnavigation';
 import HomeScreen from '../screens/main/HomeScreen';
 import WorkoutsScreen from '../screens/main/WorkoutsScreen';
 import HistoryScreen from '../screens/main/HistoryScreen';
@@ -49,7 +49,7 @@ export default function AppTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Workouts" component={WorkoutsScreen} />
+      <Tab.Screen name="Workouts" component={workoutsnavigation} />
       <Tab.Screen name="History" component={HistoryScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

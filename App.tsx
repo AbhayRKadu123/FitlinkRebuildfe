@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 export default function App() {
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <RootNavigator />
 
             <Toast />

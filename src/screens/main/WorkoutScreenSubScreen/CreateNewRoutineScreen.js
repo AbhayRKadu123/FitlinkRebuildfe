@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -16,6 +16,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import {
+    // ScrollView,
+    RefreshControl,
+} from 'react-native';
 import API from '../../../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const COLORS = {
@@ -36,7 +41,7 @@ const goals = [
     { name: 'Strength', icon: 'trending-up-outline' },
 ];
 
-const exercises = [
+const exercisess = [
     {
         id: '1',
         name: 'Bench Press',
@@ -112,12 +117,65 @@ const CreateNewRoutineScreen = ({ navigation }) => {
 
     const [showDurationOptions, setShowDurationOptions] = useState(false);
     const [showFrequencyOptions, setShowFrequencyOptions] = useState(false);
+    // const [exercises, setExercises] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [Exercise, setExercises] = useState([])
+    const [exercises, setexercises] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await getExercises();
+        setRefreshing(false);
+    };
+
+    const getExercises = async () => {
+        try {
+            setLoading(true);
+
+            const response = await API.get('/routines/getExercises?SearchedName=' + search);
+
+            if (response.data.success) {
+                setexercises(response.data.exercises);
+                // Alert.alert('Exercises fetched successfully!');
+                // console.log('Exercises:', response.data.exercises);
+            }
+
+        } catch (error) {
+            console.log(
+                'Get Exercises Error:',
+                error.response?.data || error.message
+            );
+
+            // Alert.alert('Error', 'Failed to fetch exercises.');
+             Toast.show({
+                    type: 'error',
+                    text1: 'loading Failed',
+                    text2: 'Failed to fetch exercises.' || 'Something went wrong.',
+                  });
+        } finally {
+            setLoading(false);
+        }
+    };
+    // useEffect(() => {
+    //     if (search.length > 0) {
+    //         Alert.alert(search)
+    //     }
+
+    // }, [search])
+    useEffect(() => {
+        getExercises();
+    }, []);
 
     const filteredExercises = useMemo(() => {
         return exercises.filter(exercise =>
             exercise.name.toLowerCase().includes(search.toLowerCase()) ||
             exercise.muscle.toLowerCase().includes(search.toLowerCase())
         );
+    }, [search,exercises]);
+    useEffect(() => {
+        getExercises();
     }, [search]);
 
     const isSelected = id =>
@@ -225,127 +283,153 @@ const CreateNewRoutineScreen = ({ navigation }) => {
     //     }
     // };
     const handleCreateRoutine = async () => {
-    if (!routineName.trim()) {
-        Alert.alert('Routine name required', 'Please enter a routine name.');
-        return;
-    }
-
-    if (selectedExercises.length === 0) {
-        Alert.alert('Add exercises', 'Please select at least one exercise.');
-        return;
-    }
-
-    try {
-        const token = await AsyncStorage.getItem('token')||"token";
-
-        if (!token) {
-            Alert.alert('Login required', 'Please log in again.');
+        if (!routineName.trim()) {
+            // Alert.alert('Routine name required', 'Please enter a routine name.');
+             Toast.show({
+                    type: 'error',
+                    text1: 'Routine name required',
+                    text2: 'Please enter a routine name.' || 'Something went wrong.',
+                  });
             return;
         }
 
-        const routineData = {
-            title: routineName.trim(),
-            goal: selectedGoal,
-            duration,
-            frequency,
-            exercises: selectedExercises.map((item, index) => ({
-                exerciseId: item.id,
-                order: index + 1,
-                sets: Number(item.sets),
-                reps: Number(item.reps),
-                restSeconds: Number(item.rest),
-            })),
-        };
+        if (selectedExercises.length === 0) {
+            // Alert.alert('Add exercises', 'Please select at least one exercise.');
+             Toast.show({
+                    type: 'error',
+                    text1: 'Add exercises',
+                    text2: 'Please select at least one exercise.' || 'Something went wrong.',
+                  });
+            return;
+        }
 
-        const response = await API.post(
-            '/routines/newroutine',
-            routineData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+        try {
+            const token = await AsyncStorage.getItem('token') || "token";
+
+            if (!token) {
+                // Alert.alert('Login required', 'Please log in again.');
+                    Toast.show({
+                    type: 'error',
+                    text1: 'Login required',
+                    text2: 'Please log in again.' || 'Something went wrong.',
+                  });
+                return;
             }
-        );
 
-        console.log('Routine created:', response.data);
+            const routineData = {
+                title: routineName.trim(),
+                goal: selectedGoal,
+                duration,
+                frequency,
+                exercises: selectedExercises.map((item, index) => ({
+                    exerciseId: item.id,
+                    order: index + 1,
+                    sets: Number(item.sets),
+                    reps: Number(item.reps),
+                    restSeconds: Number(item.rest),
+                })),
+            };
 
-        Alert.alert(
-            'Routine Created!',
-            `${routineName} has been created successfully.`,
-            [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
+            const response = await API.post(
+                '/routines/newroutine',
+                routineData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
 
-    } catch (error) {
-        console.log('Create Routine Error:', error.response?.data || error.message);
+            console.log('Routine created:', response.data);
 
-        Alert.alert(
-            'Error',
-            error.response?.data?.message || error.message || 'Failed to create routine.'
-        );
-    }
-};
-// const handleCreateRoutine = async () => {
-//     if (!routineName.trim()) {
-//         Alert.alert('Routine name required', 'Please enter a routine name.');
-//         return;
-//     }
+            // Alert.alert(
+            //     'Routine Created!',
+            //     `${routineName} has been created successfully.`,
+            //     [{ text: 'OK', onPress: () => navigation.goBack() }]
+            // );
+            Toast.show({
+                type: 'success',
+                text1: 'Routine Created!',
+                text2: `${routineName} has been created successfully.`,
+            });
+            navigation.goBack()
 
-//     if (selectedExercises.length === 0) {
-//         Alert.alert('Add exercises', 'Please select at least one exercise.');
-//         return;
-//     }
+        } catch (error) {
+            console.log('Create Routine Error:', error.response?.data || error.message);
 
-//     try {
-//         const token = await AsyncStorage.getItem('token')||"token";
+            // Alert.alert(
+            //     'Error',
+            //     error.response?.data?.message || error.message || 'Failed to create routine.'
+            // );
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.response?.data?.message || error.message || 'Failed to create routine.',
+            });
+        }
+    };
+    // const handleCreateRoutine = async () => {
+    //     if (!routineName.trim()) {
+    //         Alert.alert('Routine name required', 'Please enter a routine name.');
+    //         return;
+    //     }
 
-//         if (!token) {
-//             Alert.alert('Login required', 'Please log in again.');
-//             return;
-//         }
+    //     if (selectedExercises.length === 0) {
+    //         Alert.alert('Add exercises', 'Please select at least one exercise.');
+    //         return;
+    //     }
 
-//         const routineData = {
-//             title: routineName.trim(),
-//             goal: selectedGoal,
-//             duration,
-//             frequency,
-//             exercises: selectedExercises.map((item, index) => ({
-//                 exerciseId: item.id,
-//                 order: index + 1,
-//                 sets: Number(item.sets),
-//                 reps: Number(item.reps),
-//                 restSeconds: Number(item.rest),
-//             })),
-//         };
+    //     try {
+    //         const token = await AsyncStorage.getItem('token')||"token";
 
-//         const response = await axios.post(
-//             `${API}/routines/newroutine`,
-//             routineData,
-//             {
-//                 headers: {
-//                     Authorization: `Bearer ${token}`,
-//                     'Content-Type': 'application/json',
-//                 },
-//             }
-//         );
+    //         if (!token) {
+    //             Alert.alert('Login required', 'Please log in again.');
+    //             return;
+    //         }
 
-//         console.log('Routine created:', response.data);
+    //         const routineData = {
+    //             title: routineName.trim(),
+    //             goal: selectedGoal,
+    //             duration,
+    //             frequency,
+    //             exercises: selectedExercises.map((item, index) => ({
+    //                 exerciseId: item.id,
+    //                 order: index + 1,
+    //                 sets: Number(item.sets),
+    //                 reps: Number(item.reps),
+    //                 restSeconds: Number(item.rest),
+    //             })),
+    //         };
 
-//         Alert.alert(
-//             'Routine Created!',
-//             `${routineName} has been created successfully.`,
-//             [{ text: 'OK', onPress: () => navigation.goBack() }]
-//         );
+    //         const response = await axios.post(
+    //             `${API}/routines/newroutine`,
+    //             routineData,
+    //             {
+    //                 headers: {
+    //                     Authorization: `Bearer ${token}`,
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //             }
+    //         );
 
-//     } catch (error) {
-//         console.log('Create Routine Error:', error.response?.data || error.message);
+    //         console.log('Routine created:', response.data);
 
-//         Alert.alert(
-//             'Error',
-//             error.response?.data?.message || error.message || 'Failed to create routine.'
-//         );
-//     }
-// };
+    //         Alert.alert(
+    //             'Routine Created!',
+    //             `${routineName} has been created successfully.`,
+    //             [{ text: 'OK', onPress: () => navigation.goBack() }]
+    //         );
+
+    //     } catch (error) {
+    //         console.log('Create Routine Error:', error.response?.data || error.message);
+
+    //         Alert.alert(
+    //             'Error',
+    //             error.response?.data?.message || error.message || 'Failed to create routine.'
+    //         );
+    //     }
+    // };
 
     // const handleCreateRoutine = () => {
     //     if (!routineName.trim()) {
@@ -460,6 +544,15 @@ const CreateNewRoutineScreen = ({ navigation }) => {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     contentContainerStyle={styles.scrollContent}
+                     refreshControl={
+                                            <RefreshControl
+                                                refreshing={refreshing}
+                                                onRefresh={onRefresh}
+                                                colors={['#2563EB']}
+                                                progressBackgroundColor="#FFFFFF"
+                                                size="default"
+                                            />
+                                        }
                 >
 
                     {/* HERO SECTION */}

@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,17 +7,23 @@ import {
     ScrollView,
     TextInput,
     Pressable,
+
     StyleSheet,
     StatusBar,
+    Alert,
 } from 'react-native';
+import API from "../../api/api.js";
+import Toast from 'react-native-toast-message';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 // import { useState } from 'react';
 import {
-  // ScrollView,
-  RefreshControl,
+    // ScrollView,
+    RefreshControl,
 } from 'react-native';
+import ActionPopup from '../../components/ActionPopup.js';
 const COLORS = {
     primary: '#2563EB',
     primaryLight: '#EFF6FF',
@@ -29,8 +35,7 @@ const COLORS = {
 };
 
 const categories = ['All', 'Strength', 'Cardio', 'Flexibility'];
-
-const workouts = [
+const workoutss = [
     {
         id: '1',
         name: 'Push Day',
@@ -92,41 +97,137 @@ const WorkoutsScreen = ({ navigation }) => {
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [refreshing, setRefreshing] = useState(false);
+    const [workouts, setWorkouts] = useState([]);
+    const [popupVisible, setPopupVisible] = useState(false);
+    const [selectedid, setselectedid] = useState(null);
 
-      const onRefresh = async () => {
-    setRefreshing(true);
 
-    try {
-      // Call your API to reload screen data here
-      
-      setRefreshing(false);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setRefreshing(false);
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await getAllRoutine();
+        setRefreshing(false);
+        setselectedid(null);
+    };
+    const getMuscleGroup = (muscleGroup) => {
+        if (!muscleGroup) return null;
+        let muscleGroupString = '';
+        for (const ele of muscleGroup) {
+            muscleGroupString += ele.exerciseId.muscleGroup + '   ';
+        }
+        return muscleGroupString;
+
     }
-  };
+    const getAllRoutine = async () => {
+        try {
+            const response = await API.get('/routines/getAllRoutines');
+
+            if (response.data.success) {
+                console.log('All Routines:', response.data.routines);
+                setWorkouts(response.data.routines);
+            }
+        } catch (error) {
+            console.log(
+                'Get All Routine Error:',
+                error.response?.data || error.message
+            );
+        }
+    };
+
+    useEffect(() => {
+        getAllRoutine();
+    }, []);
 
     const filteredWorkouts = useMemo(() => {
-        return workouts.filter(workout => {
-            const matchesCategory =
-                selectedCategory === 'All' ||
-                workout.category === selectedCategory;
-
-            const matchesSearch =
-                workout.name.toLowerCase().includes(search.toLowerCase()) ||
-                workout.muscleGroup.toLowerCase().includes(search.toLowerCase());
-
-            return matchesCategory && matchesSearch;
-        });
-    }, [search, selectedCategory]);
+        return workouts.filter(workout =>
+            (workout.title || '')
+                .toLowerCase()
+                .includes(search.toLowerCase())
+        );
+    }, [workouts, search]);
 
     const handleWorkoutPress = workout => {
         // Navigate to your routine details screen later.
         console.log('Selected workout:', workout.name);
     };
 
+const handleDeleteRoutine = (routineId) => {
+    Alert.alert(
+        "Delete Routine",
+        "Are you sure you want to delete this routine?",
+        [
+            {
+                text: "Cancel",
+                style: "cancel",
+            },
+            {
+                text: "Delete",
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        const response = await API.delete(
+                            `/routines/deleteRoutine/${routineId}`
+                        );
+
+                        if (response.data.success) {
+                            Toast.show({
+                                type: 'success',
+                                text1: 'Routine Deleted',
+                                text2: 'Routine deleted successfully.',
+                                position: 'top',
+                                visibilityTime: 2500,
+                            });
+
+                            await getAllRoutine();
+                        } else {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Delete Failed',
+                                text2: response.data.message || 'Failed to delete routine.',
+                                position: 'top',
+                            });
+                        }
+
+                    } catch (error) {
+                        console.log(
+                            'Delete Routine Error:',
+                            error.response?.data || error.message
+                        );
+
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Delete Failed',
+                            text2: error.response?.data?.message ||
+                                'Failed to delete routine.',
+                            position: 'top',
+                        });
+
+                    } finally {
+                        setselectedid(null);
+                        setPopupVisible(false);
+                    }
+                },
+            },
+        ]
+    );
+};
+    let handleEditRoutine = (routineId) => {
+        console.log('Edit Routine:', routineId);
+        navigation?.navigate('EditRoutine', { routineId });
+    }
+
+    // let handleDeleteRoutine = async (routineId) => {
+    //     try {
+    //         const response = await API.delete(`/routines/deleteRoutine/${routineId}`);
+    //         Alert.alert(
+    //             "Delete Routine",
+    //             "Are you sure you want to delete this routine?"+routineId)
+    //     }catch (error) {
+    //         console.log('Delete Routine Error:', error.response?.data || error.message);
+    //     }finally {
+    //         setselectedid(null);
+    //         setPopupVisible(false);
+    //     }
+    // };
     const handleCreateRoutine = () => {
         // Replace this with your actual Create Routine route.
         navigation?.navigate('CreateRoutine');
@@ -134,13 +235,13 @@ const WorkoutsScreen = ({ navigation }) => {
 
     const renderWorkoutCard = workout => (
         <Pressable
-            key={workout.id}
+            key={workout._id}
             style={styles.workoutCard}
             onPress={() => handleWorkoutPress(workout)}
         >
             <View style={styles.imageContainer}>
                 <Image
-                    source={{ uri: workout.image }}
+                    source={{ uri: workout?.image || "https://res.cloudinary.com/dcrso2pvr/image/upload/v1793901693/Intense_Incline_Dumbbell_Press_r4hifs.png" }}
                     style={styles.workoutImage}
                     resizeMode="cover"
                 />
@@ -152,7 +253,7 @@ const WorkoutsScreen = ({ navigation }) => {
 
                 <Pressable
                     style={styles.moreButton}
-                    onPress={() => console.log('Workout options:', workout.name)}
+                    onPress={() => { setPopupVisible(true); setselectedid(workout._id); console.log('More options for:', workout.name) }}
                     hitSlop={8}
                 >
                     <Ionicons name="ellipsis-horizontal" size={20} color={COLORS.text} />
@@ -160,8 +261,8 @@ const WorkoutsScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.cardContent}>
-                <Text style={styles.workoutName}>{workout.name}</Text>
-                <Text style={styles.muscleGroup}>{workout.muscleGroup}</Text>
+                <Text style={styles.workoutName}>{workout.title}</Text>
+                <Text style={styles.muscleGroup}>{getMuscleGroup(workout.exercises) || 'No muscle group specified'}</Text>
 
                 <View style={styles.cardDivider} />
 
@@ -169,7 +270,7 @@ const WorkoutsScreen = ({ navigation }) => {
                     <View style={styles.cardInfo}>
                         <Ionicons name="fitness-outline" size={16} color={COLORS.secondary} />
                         <Text style={styles.cardInfoText}>
-                            {workout.exercises} exercises
+                            {workout.exercises?.length || 0} exercises
                         </Text>
                     </View>
 
@@ -190,16 +291,26 @@ const WorkoutsScreen = ({ navigation }) => {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
-                 refreshControl={
+                refreshControl={
                     <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                      colors={['#2563EB']}
-                      progressBackgroundColor="#FFFFFF"
-                      size="default"
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#2563EB']}
+                        progressBackgroundColor="#FFFFFF"
+                        size="default"
                     />
-                  }
+                }
             >
+
+                <ActionPopup
+                    visible={popupVisible}
+                    onClose={() => { setPopupVisible(false); setselectedid(null) }}
+                    options={[
+                        { id: 1, label: 'Edit', icon: 'create', color: '#2563EB', onPress: () => handleEditRoutine(selectedid) },
+                        { id: 2, label: 'Delete', icon: 'trash', color: '#EF4444', onPress: () => handleDeleteRoutine(selectedid) },
+                    ]}
+                />
+
                 {/* Header */}
                 <View style={styles.header}>
                     <View>
@@ -335,7 +446,7 @@ const WorkoutsScreen = ({ navigation }) => {
                     Stay consistent. Keep getting stronger.
                 </Text>
             </ScrollView>
-      </>
+        </>
     );
 };
 

@@ -19,6 +19,8 @@ import {
   // ScrollView,
   RefreshControl,
 } from 'react-native';
+
+import { saveData, getData, removeData } from '../../storage/storage';
 // import API from '../../api/api'; // Adjust the import path as necessaryR
 import * as Keychain from 'react-native-keychain';
 // Replace this with your Cloudinary logo URL.
@@ -73,6 +75,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       setLoading(true);
+      await removeData('token');
 
       // Call login API
       const response = await API.post('/auth/login', {
@@ -81,6 +84,8 @@ export default function LoginScreen({ navigation }) {
       });
 
       const { token, user } = response.data;
+      
+    await saveData('token', token);
 
       // Securely store JWT token
       await Keychain.setGenericPassword(

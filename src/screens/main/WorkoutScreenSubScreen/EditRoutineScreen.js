@@ -16,6 +16,8 @@ import {
     // ScrollView,
     RefreshControl,
 } from 'react-native';
+// import { Ionicons } from '@expo/vector-icons';
+import { saveData, getData, removeData } from '../../../storage/storage';
 
 
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -159,6 +161,24 @@ const EditRoutineScreen = ({ navigation, route }) => {
                 'Get Routine Error:',
                 error.response?.data || error.message
             );
+             if( error.response?.data || error.message === 'Token expired') {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Session Expired',     
+                                
+                                text2: 'Please log in again.',
+                                position: 'top',
+                                // visibilityTime: 2500,
+                            });
+            
+            
+            
+                            await removeData('token');
+                            return navigation?.replace('Auth');
+            
+                            //  navigation.navigate('Home')
+                        }
+            
 
             Toast.show({
                 type: 'error',
@@ -193,11 +213,28 @@ const EditRoutineScreen = ({ navigation, route }) => {
                 'Get Exercises Error:',
                 error.response?.data || error.message
             );
-
+             if( error.response?.data || error.message === 'Token expired') {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Session Expired',     
+                                
+                                text2: 'Please log in again.',
+                                position: 'top',
+                                // visibilityTime: 2500,
+                            });
+            
+            
+            
+                            await removeData('token');
+                            return navigation?.replace('Auth');
+            
+                            //  navigation.navigate('Home')
+                        }
+            
             Toast.show({
                 type: 'error',
                 text1: 'Loading Failed',
-                text2: 'Failed to fetch exercises.',
+                text2:   error.response?.data || error.message || 'Failed to fetch exercises.',
             });
         }
     };
@@ -324,7 +361,7 @@ const EditRoutineScreen = ({ navigation, route }) => {
         try {
             setSaving(true);
 
-            const token = await AsyncStorage.getItem('token') || "token";
+            const token = await getData('token');
 
             if (!token) {
                 Toast.show({
@@ -381,6 +418,23 @@ const EditRoutineScreen = ({ navigation, route }) => {
                 'Update Routine Error:',
                 error.response?.data || error.message
             );
+             if( error.response?.data || error.message === 'Token expired') {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Session Expired',     
+                                
+                                text2: 'Please log in again.',
+                                position: 'top',
+                                // visibilityTime: 2500,
+                            });
+            
+            
+            
+                            await removeData('token');
+                            return navigation?.replace('Auth');
+            
+                            //  navigation.navigate('Home')
+                        }
 
             Toast.show({
                 type: 'error',

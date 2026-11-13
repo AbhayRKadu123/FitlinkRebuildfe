@@ -34,7 +34,10 @@ const COLORS = {
     border: '#E5E7EB',
 };
 
-const categories = ['All', 'Strength', 'Cardio', 'Flexibility'];
+const categories = [ 'All','Build Muscle',
+        'Lose Fat',
+        'Endurance',
+        'Strength',];
 const workoutss = [
     {
         id: '1',
@@ -108,6 +111,10 @@ const WorkoutsScreen = ({ navigation }) => {
         setRefreshing(false);
         setselectedid(null);
     };
+    useEffect(() => {
+        getAllRoutine(selectedCategory === 'All' ? null : selectedCategory);
+
+    },[selectedCategory])
     const getMuscleGroup = (muscleGroup) => {
         if (!muscleGroup) return null;
         let muscleGroupString = '';
@@ -117,9 +124,9 @@ const WorkoutsScreen = ({ navigation }) => {
         return muscleGroupString;
 
     }
-    const getAllRoutine = async () => {
+    const getAllRoutine = async (type) => {
         try {
-            const response = await API.get('/routines/getAllRoutines');
+            const response = await API.get('/routines/getAllRoutines?Category=' + (selectedCategory || 'All'));
 
             if (response.data.success) {
                 console.log('All Routines:', response.data.routines);
@@ -130,6 +137,28 @@ const WorkoutsScreen = ({ navigation }) => {
                 'Get All Routine Error:',
                 error.response?.data || error.message
             );
+            // Alert.alert(
+            //     'Error',
+            //     error.response?.data?.message || 'Failed to fetch routines.',
+            //     [{ text: 'OK' }]
+            // );
+            if( error.response?.data || error.message === 'Token expired') {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Session Expired',     
+                    
+                    text2: 'Please log in again.',
+                    position: 'top',
+                    // visibilityTime: 2500,
+                });
+
+
+
+                await removeData('token');
+                return navigation?.replace('Auth');
+
+                //  navigation.navigate('Home')
+            }
         }
     };
 
@@ -192,6 +221,23 @@ const handleDeleteRoutine = (routineId) => {
                             'Delete Routine Error:',
                             error.response?.data || error.message
                         );
+                          if( error.response?.data || error.message === 'Token expired') {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Session Expired',     
+                    
+                    text2: 'Please log in again.',
+                    position: 'top',
+                    // visibilityTime: 2500,
+                });
+                await removeData('token');
+
+
+
+                return navigation?.replace('Auth');
+
+                //  navigation.navigate('Home')
+            }
 
                         Toast.show({
                             type: 'error',
@@ -200,6 +246,7 @@ const handleDeleteRoutine = (routineId) => {
                                 'Failed to delete routine.',
                             position: 'top',
                         });
+                        
 
                     } finally {
                         setselectedid(null);

@@ -123,7 +123,7 @@ const CreateNewRoutineScreen = ({ navigation }) => {
     const [exercises, setexercises] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
-    
+
     const onRefresh = async () => {
         setRefreshing(true);
         await getExercises();
@@ -149,11 +149,29 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             );
 
             // Alert.alert('Error', 'Failed to fetch exercises.');
-             Toast.show({
+            if (error.response?.data || error.message === 'Token expired') {
+                Toast.show({
                     type: 'error',
-                    text1: 'loading Failed',
-                    text2: 'Failed to fetch exercises.' || 'Something went wrong.',
-                  });
+                    text1: 'Session Expired',
+
+                    text2: 'Please log in again.',
+                    position: 'top',
+                    // visibilityTime: 2500,
+                });
+
+
+
+
+                await removeData('token');
+                return navigation?.replace('Auth');
+
+                //  navigation.navigate('Home')
+            }
+            Toast.show({
+                type: 'error',
+                text1: 'loading Failed',
+                text2: 'Failed to fetch exercises.' || 'Something went wrong.',
+            });
         } finally {
             setLoading(false);
         }
@@ -173,7 +191,7 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             exercise.name.toLowerCase().includes(search.toLowerCase()) ||
             exercise.muscle.toLowerCase().includes(search.toLowerCase())
         );
-    }, [search,exercises]);
+    }, [search, exercises]);
     useEffect(() => {
         getExercises();
     }, [search]);
@@ -285,21 +303,21 @@ const CreateNewRoutineScreen = ({ navigation }) => {
     const handleCreateRoutine = async () => {
         if (!routineName.trim()) {
             // Alert.alert('Routine name required', 'Please enter a routine name.');
-             Toast.show({
-                    type: 'error',
-                    text1: 'Routine name required',
-                    text2: 'Please enter a routine name.' || 'Something went wrong.',
-                  });
+            Toast.show({
+                type: 'error',
+                text1: 'Routine name required',
+                text2: 'Please enter a routine name.' || 'Something went wrong.',
+            });
             return;
         }
 
         if (selectedExercises.length === 0) {
             // Alert.alert('Add exercises', 'Please select at least one exercise.');
-             Toast.show({
-                    type: 'error',
-                    text1: 'Add exercises',
-                    text2: 'Please select at least one exercise.' || 'Something went wrong.',
-                  });
+            Toast.show({
+                type: 'error',
+                text1: 'Add exercises',
+                text2: 'Please select at least one exercise.' || 'Something went wrong.',
+            });
             return;
         }
 
@@ -308,17 +326,18 @@ const CreateNewRoutineScreen = ({ navigation }) => {
 
             if (!token) {
                 // Alert.alert('Login required', 'Please log in again.');
-                    Toast.show({
+                Toast.show({
                     type: 'error',
                     text1: 'Login required',
                     text2: 'Please log in again.' || 'Something went wrong.',
-                  });
+                });
                 return;
             }
 
             const routineData = {
                 title: routineName.trim(),
                 goal: selectedGoal,
+
                 duration,
                 frequency,
                 exercises: selectedExercises.map((item, index) => ({
@@ -362,6 +381,24 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             //     'Error',
             //     error.response?.data?.message || error.message || 'Failed to create routine.'
             // );
+            if (error.response?.data || error.message === 'Token expired') {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Session Expired',
+
+                    text2: 'Please log in again.',
+                    position: 'top',
+                    // visibilityTime: 2500,
+                });
+
+
+
+
+                await removeData('token');
+                return navigation?.replace('Auth');
+
+                //  navigation.navigate('Home')
+            }
             Toast.show({
                 type: 'error',
                 text1: 'Error',
@@ -544,15 +581,15 @@ const CreateNewRoutineScreen = ({ navigation }) => {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     contentContainerStyle={styles.scrollContent}
-                     refreshControl={
-                                            <RefreshControl
-                                                refreshing={refreshing}
-                                                onRefresh={onRefresh}
-                                                colors={['#2563EB']}
-                                                progressBackgroundColor="#FFFFFF"
-                                                size="default"
-                                            />
-                                        }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#2563EB']}
+                            progressBackgroundColor="#FFFFFF"
+                            size="default"
+                        />
+                    }
                 >
 
                     {/* HERO SECTION */}

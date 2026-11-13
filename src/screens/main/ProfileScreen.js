@@ -12,7 +12,8 @@ import {
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { removeData } from "../../storage/storage.js"
+import Toast from 'react-native-toast-message';
 const ProfileScreen = ({ navigation }) => {
   // Sample profile data for now
   const [user] = useState({
@@ -31,24 +32,16 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => {
-            // Connect your logout API and token removal here.
-            console.log('Logout pressed');
-          },
-        },
-      ],
-    );
+    removeData('token');
+    Toast.show({
+      type: 'success',
+      text1: 'User logged out successfully.',
+      text2: 'Thanks for using our app!❤️',
+      position: 'top',
+      visibilityTime: 2500,
+    });
+    return navigation?.replace('Auth');
+
   };
 
   const handleMenuPress = (title) => {
@@ -230,8 +223,8 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={{ height: 25 }} />
       </ScrollView>
-      </>
-    
+    </>
+
   );
 };
 

@@ -176,6 +176,7 @@ const WorkoutsScreen = ({ navigation }) => {
 
     const handleWorkoutPress = workout => {
         // Navigate to your routine details screen later.
+        navigation?.navigate('LogWorkout', { routineId: workout._id });
         console.log('Selected workout:', workout.name);
     };
 

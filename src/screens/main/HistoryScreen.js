@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import API from '../../api/api';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
@@ -67,11 +69,54 @@ const StatCard = ({ icon, value, label, color }) => (
 );
 
 const HistoryScreen = ({ navigation }) => {
+  // const [selectedFilter, setSelectedFilter] = useState('All Time');
   const [selectedFilter, setSelectedFilter] = useState('All Time');
 
+  const [workouts, setWorkouts] = useState([]);
+  const [statistics, setStatistics] = useState({
+    totalWorkouts: 0,
+    totalMinutes: 0,
+  });
+  const [weeklyTrend, setWeeklyTrend] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const fetchWorkoutHistory = async () => {
+    try {
+      setLoading(true);
+
+      const response = await API.get('/routines/history', {
+        params: {
+          filter: selectedFilter,
+        },
+      });
+
+      const data = response.data.data;
+
+      setWorkouts(data.history || []);
+      setStatistics(data.statistics || {
+        totalWorkouts: 0,
+        totalMinutes: 0,
+      });
+      setWeeklyTrend(data.weeklyTrend || []);
+
+    } catch (error) {
+      console.log(
+        'History API Error:',
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkoutHistory();
+  }, [selectedFilter]);
+
   const handleWorkoutPress = (workout) => {
-    // Later navigate to workout details
-    console.log('Selected workout:', workout.name);
+    // Alert.alert(workout?._id||"id")
+    navigation.navigate('HistoryWorkoutScreen',{
+      Id:workout?._id
+    })
   };
 
   return (
@@ -136,22 +181,25 @@ const HistoryScreen = ({ navigation }) => {
         <View style={styles.statsContainer}>
           <StatCard
             icon="barbell-outline"
-            value="28"
+            value={statistics.totalWorkouts.toString()}
             label="Workouts"
             color="#246BFD"
           />
 
           <StatCard
             icon="time-outline"
-            value="1,482"
+            value={statistics.totalMinutes.toLocaleString()}
             label="Total Minutes"
             color="#4285F4"
           />
 
           <StatCard
-            icon="flame-outline"
-            value="12.5k"
-            label="Calories"
+            icon="layers-outline"
+            value={workouts.reduce(
+              (total, workout) => total + (workout.totalSets || 0),
+              0
+            ).toString()}
+            label="Total Sets"
             color="#FF9635"
           />
         </View>
@@ -187,19 +235,29 @@ const HistoryScreen = ({ navigation }) => {
               </View>
 
               <View style={styles.barContainer}>
-                {weeklyData.map((value, index) => (
-                  <View key={index} style={styles.barColumn}>
-                    <View
-                      style={[
-                        styles.bar,
-                        { height: `${(value / 3) * 100}%` },
-                      ]}
-                    />
-                    <Text style={styles.weekLabel}>
-                      W{index + 1}
-                    </Text>
-                  </View>
-                ))}
+                {weeklyTrend.map((item, index) => {
+                  const maxCount = Math.max(
+                    ...weeklyTrend.map((week) => week.count),
+                    1
+                  );
+
+                  return (
+                    <View key={index} style={styles.barColumn}>
+                      <View
+                        style={[
+                          styles.bar,
+                          {
+                            height: `${(item.count / maxCount) * 100}%`,
+                          },
+                        ]}
+                      />
+
+                      <Text style={styles.weekLabel}>
+                        {item.week}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           </View>
@@ -218,55 +276,62 @@ const HistoryScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {workouts.map((workout) => (
-          <TouchableOpacity
-            key={workout.id}
-            style={styles.workoutCard}
-            activeOpacity={0.8}
-            onPress={() => handleWorkoutPress(workout)}
-          >
-            <View
-              style={[
-                styles.workoutIcon,
-                { backgroundColor: workout.color },
-              ]}
+        {loading ? (
+          <Text style={styles.emptyText}>Loading workouts...</Text>
+        ) : workouts.length === 0 ? (
+          <Text style={styles.emptyText}>
+            No workouts found for this period.
+          </Text>
+        ) : (
+          workouts.map((workout) => (
+            <TouchableOpacity
+              key={workout._id}
+              style={styles.workoutCard}
+              activeOpacity={0.8}
+              onPress={() => handleWorkoutPress(workout)}
             >
-              <Ionicons
-                name={workout.icon}
-                size={25}
-                color="#246BFD"
-              />
-            </View>
+              <View style={styles.workoutIcon}>
+                <Ionicons
+                  name="barbell-outline"
+                  size={25}
+                  color="#246BFD"
+                />
+              </View>
 
-            <View style={styles.workoutInfo}>
-              <Text style={styles.workoutName}>
-                {workout.name}
-              </Text>
+              <View style={styles.workoutInfo}>
+                <Text style={styles.workoutName}>
+                  {workout.name}
+                </Text>
 
-              <Text style={styles.workoutDetails}>
-                {workout.exercises} exercises • {workout.duration} min
-              </Text>
+                <Text style={styles.workoutDetails}>
+                  {workout.exercises} exercises • {workout.duration} min
+                </Text>
 
-              <Text style={styles.workoutDate}>
-                {workout.date}
-              </Text>
-            </View>
+                <Text style={styles.workoutDate}>
+                  {new Date(workout.date).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </Text>
+              </View>
 
-            <View style={styles.completedIcon}>
-              <Ionicons
-                name="checkmark"
-                size={15}
-                color="#FFFFFF"
-              />
-            </View>
-          </TouchableOpacity>
-        ))}
+              <View style={styles.completedIcon}>
+                <Ionicons
+                  name="checkmark"
+                  size={15}
+                  color="#FFFFFF"
+                />
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
 
         {/* Bottom spacing */}
         <View style={{ height: 25 }} />
       </ScrollView>
-      </>
-    
+    </>
+
   );
 };
 
@@ -318,6 +383,12 @@ const styles = StyleSheet.create({
   filterContainer: {
     alignItems: 'center',
     gap: 8,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#8490A9',
+    paddingVertical: 30,
+    fontSize: 14,
   },
 
   filterButton: {

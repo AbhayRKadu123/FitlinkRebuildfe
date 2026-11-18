@@ -7,7 +7,7 @@ import WorkoutsScreen from '../screens/main/WorkoutsScreen';
 import CreateNewRoutineScreen from '../screens/main/WorkoutScreenSubScreen/CreateNewRoutineScreen';
 import { View, Text } from 'react-native';
 import EditRoutineScreen from '../screens/main/WorkoutScreenSubScreen/EditRoutineScreen';
-
+import HistoryWorkoutScreen from "../screens/main/WorkoutScreenSubScreen/HistoryWorkoutScreen"
 import LogWorkoutScreen from "../screens/main/WorkoutScreenSubScreen/LoggWorkoutScreen"
 
 const Stack = createNativeStackNavigator();
@@ -34,6 +34,7 @@ export default function workoutsnavigation() {
         component={EditRoutineScreen}
       // options={{ headerShown: false }}
       />
+    
       <Stack.Screen
         name="LogWorkout"
         component={LogWorkoutScreen}

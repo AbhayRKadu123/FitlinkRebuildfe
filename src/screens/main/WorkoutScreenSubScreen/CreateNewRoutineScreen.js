@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import axios from 'axios';
+import { saveData, getData, removeData } from "../../../storage/storage"
 import Toast from 'react-native-toast-message';
 import {
     // ScrollView,
@@ -132,7 +133,9 @@ const CreateNewRoutineScreen = ({ navigation }) => {
 
     const getExercises = async () => {
         try {
+            // if(loading) return;
             setLoading(true);
+            // Alert.alert("entered get exercise")
 
             const response = await API.get('/routines/getExercises?SearchedName=' + search);
 
@@ -149,7 +152,7 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             );
 
             // Alert.alert('Error', 'Failed to fetch exercises.');
-            if (error.response?.data || error.message === 'Token expired') {
+            if (error.response?.data && error.message === 'Token expired') {
                 Toast.show({
                     type: 'error',
                     text1: 'Session Expired',
@@ -170,7 +173,7 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             Toast.show({
                 type: 'error',
                 text1: 'loading Failed',
-                text2: 'Failed to fetch exercises.' || 'Something went wrong.',
+                text2: error.message||'Failed to fetch exercises.' || 'Something went wrong.',
             });
         } finally {
             setLoading(false);
@@ -182,9 +185,9 @@ const CreateNewRoutineScreen = ({ navigation }) => {
     //     }
 
     // }, [search])
-    useEffect(() => {
-        getExercises();
-    }, []);
+    // useEffect(() => {
+    //     getExercises();
+    // }, []);
 
     const filteredExercises = useMemo(() => {
         return exercises.filter(exercise =>
@@ -192,9 +195,16 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             exercise.muscle.toLowerCase().includes(search.toLowerCase())
         );
     }, [search, exercises]);
+    // useEffect(() => {
+    //     getExercises();
+    // }, [search]);
     useEffect(() => {
-        getExercises();
-    }, [search]);
+  const timer = setTimeout(() => {
+    getExercises();
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [search]);
 
     const isSelected = id =>
         selectedExercises.some(item => item.id === id);
@@ -381,7 +391,7 @@ const CreateNewRoutineScreen = ({ navigation }) => {
             //     'Error',
             //     error.response?.data?.message || error.message || 'Failed to create routine.'
             // );
-            if (error.response?.data || error.message === 'Token expired') {
+            if (error.response?.data && error.message === 'Token expired') {
                 Toast.show({
                     type: 'error',
                     text1: 'Session Expired',

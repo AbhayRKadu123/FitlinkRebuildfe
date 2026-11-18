@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import WorkoutHistoryModal from "../../../components/workout/WorkoutHistoryModel.js"
 
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useEffect } from 'react';
@@ -118,12 +119,13 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   //   }));
   // });
   const routineId = route?.params?.routineId;
-  const IsHistory=true;
+  const IsHistory = true;
 
   const [routine, setRoutine] = useState(null);
   const [exercises, setExercises] = useState([]);
   const [existingSessionId, setExistingSessionId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [historyExerciseName,sethistoryExerciseName]=useState("")
   useEffect(() => {
     // Alert.alert('Routine ID', `The routine ID is: ${routineId}`);
   }, [routineId]);
@@ -131,6 +133,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   const [saving, setSaving] = useState(false);
   const [startTime] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
+  const [showhistory, setshowhistory] = useState(false)
 
   // --------------------------------------------------
   // ADD SET
@@ -189,14 +192,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
       try {
         if (!routineId) {
           // Alert.alert('Error', 'Routine ID not found');
-            Toast.show({
-                              type: 'error',
-                              text1: 'Routine ID not found',     
-                              
-                              text2: 'Routine ID not found.',
-                              position: 'top',
-                              // visibilityTime: 2500,
-                          });
+          Toast.show({
+            type: 'error',
+            text1: 'Routine ID not found',
+
+            text2: 'Routine ID not found.',
+            position: 'top',
+            // visibilityTime: 2500,
+          });
           return;
         }
 
@@ -275,14 +278,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
         //   'Error',
         //   error.response?.data?.message || 'Unable to load workout'
         // );
-            Toast.show({
-                              type: 'error',
-                              text1: 'error loading workout',     
-                              
-                              text2: error.response?.data?.message || 'Unable to load workout',
-                              position: 'top',
-                              // visibilityTime: 2500,
-                          });
+        Toast.show({
+          type: 'error',
+          text1: 'error loading workout',
+
+          text2: error.response?.data?.message || 'Unable to load workout',
+          position: 'top',
+          // visibilityTime: 2500,
+        });
       } finally {
         setLoading(false);
       }
@@ -327,14 +330,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
           //   'Cannot delete set',
           //   'An exercise must have at least one set.',
           // );
-           Toast.show({
-                              type: 'error',
-                              text1: 'Cannot delete set',     
-                              
-                              text2: 'An exercise must have at least one set.',
-                              position: 'top',
-                              // visibilityTime: 2500,
-                          });
+          Toast.show({
+            type: 'error',
+            text1: 'Cannot delete set',
+
+            text2: 'An exercise must have at least one set.',
+            position: 'top',
+            // visibilityTime: 2500,
+          });
           return exercise;
         }
 
@@ -405,14 +408,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
 
     if (unusedExercises.length === 0) {
       // Alert.alert('No exercises available', 'All mock exercises have been added.');
-       Toast.show({
-                              type: 'error',
-                              text1: 'No exercises available',     
-                              
-                              text2: 'All mock exercises have been added.',
-                              position: 'top',
-                              // visibilityTime: 2500,
-                          });
+      Toast.show({
+        type: 'error',
+        text1: 'No exercises available',
+
+        text2: 'All mock exercises have been added.',
+        position: 'top',
+        // visibilityTime: 2500,
+      });
       return;
     }
 
@@ -440,14 +443,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
     //   'Select an exercise to add',
     //   buttons,
     // );
-     Toast.show({
-                              type: 'error',
-                              text1:  'Add Exercise',     
-                              
-                              text2: 'Select an exercise to add',
-                              position: 'top',
-                              // visibilityTime: 2500,
-                          });
+    Toast.show({
+      type: 'error',
+      text1: 'Add Exercise',
+
+      text2: 'Select an exercise to add',
+      position: 'top',
+      // visibilityTime: 2500,
+    });
   };
 
   // --------------------------------------------------
@@ -480,14 +483,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   const handleSaveWorkout = async () => {
     if (exercises.length === 0) {
       // Alert.alert('No exercises', 'Please add at least one exercise.');
-       Toast.show({
-                              type: 'error',
-                              text1:  'No exercises',     
-                              
-                              text2: 'Please add at least one exercise.',
-                              position: 'top',
-                              // visibilityTime: 2500,
-                          });
+      Toast.show({
+        type: 'error',
+        text1: 'No exercises',
+
+        text2: 'Please add at least one exercise.',
+        position: 'top',
+        // visibilityTime: 2500,
+      });
       return;
     }
 
@@ -586,47 +589,47 @@ const LogWorkoutScreen = ({ navigation, route }) => {
     };
 
     try {
-  setSaving(true);
+      setSaving(true);
 
-  let response;
+      let response;
 
-  if (existingSessionId) {
-    // Update today's existing workout session
-    response = await API.put(
-      `/routines/${existingSessionId}`,
-      payload
-    );
-  } else {
-    // Create a new workout session
-    response = await API.post(
-      '/routines/log',
-      payload
-    );
-  }
+      if (existingSessionId) {
+        // Update today's existing workout session
+        response = await API.put(
+          `/routines/${existingSessionId}`,
+          payload
+        );
+      } else {
+        // Create a new workout session
+        response = await API.post(
+          '/routines/log',
+          payload
+        );
+      }
 
-  Toast.show({
-    type: 'success',
-    text1: 'Workout Saved',
-    text2: response.data?.message || 'Workout saved successfully!',
-    position: 'top',
-  });
+      Toast.show({
+        type: 'success',
+        text1: 'Workout Saved',
+        text2: response.data?.message || 'Workout saved successfully!',
+        position: 'top',
+      });
 
-} catch (error) {
-  console.log(
-    'SAVE WORKOUT ERROR:',
-    error.response?.data || error.message
-  );
+    } catch (error) {
+      console.log(
+        'SAVE WORKOUT ERROR:',
+        error.response?.data || error.message
+      );
 
-  Toast.show({
-    type: 'error',
-    text1: 'Save Failed',
-    text2: error.response?.data?.message || 'Unable to save workout.',
-    position: 'top',
-  })
-  
-} finally {
-  setSaving(false);
-}
+      Toast.show({
+        type: 'error',
+        text1: 'Save Failed',
+        text2: error.response?.data?.message || 'Unable to save workout.',
+        position: 'top',
+      })
+
+    } finally {
+      setSaving(false);
+    }
   };
 
   // --------------------------------------------------
@@ -668,6 +671,12 @@ const LogWorkoutScreen = ({ navigation, route }) => {
       >
         {/* HEADER */}
         <View style={styles.header}>
+          <WorkoutHistoryModal
+            visible={showhistory}
+            onClose={() => setshowhistory(false)}
+            exerciseName={historyExerciseName}
+          />
+          {/* {showhistory&&<TouchableOpacity onPress={()=>{setshowhistory((prev)=>{return !prev})}}><Text style={{color:"black",fontSize:20}}>Show History</Text></TouchableOpacity>} */}
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -680,7 +689,14 @@ const LogWorkoutScreen = ({ navigation, route }) => {
             <Text style={styles.headerSubtitle}>
               Track your workout performance
             </Text>
+
           </View>
+          <TouchableOpacity
+            style={styles.HistoryButton}
+            onPress={() => { navigation.navigate("History") }}
+          >
+            <Ionicons name="time-outline" size={23} color="#172343" />
+          </TouchableOpacity>
         </View>
 
         {/* ROUTINE CARD */}
@@ -772,7 +788,15 @@ const LogWorkoutScreen = ({ navigation, route }) => {
                   {exercise.sets.length} Sets
                 </Text>
               </TouchableOpacity>
-
+ 
+            {/* <Ionicons name="time-outline" size={23} color="#172343" /> */}
+            <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {setshowhistory(true);sethistoryExerciseName(exercise.exerciseName)}}
+              >
+               <Ionicons name="time-outline" size={23} color="#172343" /> 
+              </TouchableOpacity>
+          
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={() => handleToggleExercise(exerciseIndex)}
@@ -949,10 +973,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: "space-between",
     marginBottom: 20,
   },
 
   backButton: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    backgroundColor: '#EAF1FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  HistoryButton: {
     width: 43,
     height: 43,
     borderRadius: 14,

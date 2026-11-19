@@ -134,6 +134,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   const [startTime] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
   const [showhistory, setshowhistory] = useState(false)
+  const[PreviousWorkout,setPreviousWorkout]=useState(null)
 
   // --------------------------------------------------
   // ADD SET
@@ -188,6 +189,25 @@ const LogWorkoutScreen = ({ navigation, route }) => {
 
 
   useEffect(() => {
+    const getPreviousWorkout = async () => {
+  try {
+    const response = await API.get(
+      `/routines/previous/${routineId}`
+    );
+
+    if (response.data.success) {
+      console.log('Previous workout:', response.data.data);
+      // Alert.alert('response.data',response.data.data.routineName)
+      setPreviousWorkout(response.data.data);
+    }
+
+  } catch (error) {
+    console.log(
+      'Previous workout error:',
+      error.response?.data || error.message
+    );
+  }
+};
     const fetchWorkout = async () => {
       try {
         if (!routineId) {
@@ -290,7 +310,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
         setLoading(false);
       }
     };
-
+    getPreviousWorkout();
     fetchWorkout();
   }, [routineId]);
 
@@ -675,6 +695,8 @@ const LogWorkoutScreen = ({ navigation, route }) => {
             visible={showhistory}
             onClose={() => setshowhistory(false)}
             exerciseName={historyExerciseName}
+            data={PreviousWorkout }
+
           />
           {/* {showhistory&&<TouchableOpacity onPress={()=>{setshowhistory((prev)=>{return !prev})}}><Text style={{color:"black",fontSize:20}}>Show History</Text></TouchableOpacity>} */}
           <TouchableOpacity
@@ -942,7 +964,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
           ) : (
             <>
               <Ionicons name="checkmark-circle" size={23} color="#FFFFFF" />
-              <Text style={styles.saveButtonText}>{exercises.length > 0 ? 'Update Workout' : 'Save Workout'}</Text>
+              <Text style={styles.saveButtonText}>{existingSessionId? 'Update Workout' : 'Save Workout'}</Text>
             </>
           )}
         </TouchableOpacity>

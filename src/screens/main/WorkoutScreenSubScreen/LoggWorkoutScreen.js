@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import WorkoutHistoryModal from "../../../components/workout/WorkoutHistoryModel.js"
-
+import AddExerciseModal from "../../../components/workout/AddExerciseModal.js"
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useEffect } from 'react';
 import {
@@ -125,7 +125,8 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   const [exercises, setExercises] = useState([]);
   const [existingSessionId, setExistingSessionId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [historyExerciseName,sethistoryExerciseName]=useState("")
+  const [historyExerciseName, sethistoryExerciseName] = useState("")
+  const [showAddExercise, setShowAddExercise] = useState(false);
   useEffect(() => {
     // Alert.alert('Routine ID', `The routine ID is: ${routineId}`);
   }, [routineId]);
@@ -134,7 +135,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   const [startTime] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
   const [showhistory, setshowhistory] = useState(false)
-  const[PreviousWorkout,setPreviousWorkout]=useState(null)
+  const [PreviousWorkout, setPreviousWorkout] = useState(null)
 
   // --------------------------------------------------
   // ADD SET
@@ -190,24 +191,24 @@ const LogWorkoutScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     const getPreviousWorkout = async () => {
-  try {
-    const response = await API.get(
-      `/routines/previous/${routineId}`
-    );
+      try {
+        const response = await API.get(
+          `/routines/previous/${routineId}`
+        );
 
-    if (response.data.success) {
-      console.log('Previous workout:', response.data.data);
-      // Alert.alert('response.data',response.data.data.routineName)
-      setPreviousWorkout(response.data.data);
-    }
+        if (response.data.success) {
+          console.log('Previous workout:', response.data.data);
+          // Alert.alert('response.data',response.data.data.routineName)
+          setPreviousWorkout(response.data.data);
+        }
 
-  } catch (error) {
-    console.log(
-      'Previous workout error:',
-      error.response?.data || error.message
-    );
-  }
-};
+      } catch (error) {
+        console.log(
+          'Previous workout error:',
+          error.response?.data || error.message
+        );
+      }
+    };
     const fetchWorkout = async () => {
       try {
         if (!routineId) {
@@ -245,45 +246,109 @@ const LogWorkoutScreen = ({ navigation, route }) => {
           setNotes(existingSession.notes || '');
         }
 
+// 3. Load exercises from today's session if it exists.
+// Otherwise, load exercises from the saved routine.
+
+let mappedExercises = [];
+
+if (
+  existingSession &&
+  Array.isArray(existingSession.exercises)
+) {
+  // Load actual exercises saved in today's workout session
+  mappedExercises = existingSession.exercises.map((item) => {
+    const exerciseId =
+      item.exerciseId?._id || item.exerciseId;
+
+    return {
+      exerciseId: String(exerciseId),
+      exerciseName: item.exerciseName || 'Exercise',
+      muscleGroup: item.muscleGroup || '',
+
+      sets: item.sets?.length
+        ? item.sets.map((set) => ({
+            weight: String(set.weight ?? ''),
+            reps: String(set.reps ?? ''),
+          }))
+        : [{ weight: '', reps: '' }],
+
+      expanded: true,
+    };
+  });
+
+} else {
+  // No existing session: load the original routine exercises
+  mappedExercises = (routineData.exercises || []).map((item) => {
+    const exerciseDetails = item.exerciseId;
+
+    const targetSetCount = Number(item.sets) || 1;
+
+    return {
+      exerciseId: String(exerciseDetails?._id),
+      exerciseName:
+        exerciseDetails?.name ||
+        exerciseDetails?.exerciseName ||
+        'Exercise',
+
+      muscleGroup: exerciseDetails?.muscleGroup || '',
+
+      sets: Array.from(
+        { length: targetSetCount },
+        () => ({
+          weight: '',
+          reps: '',
+        })
+      ),
+
+      expanded: true,
+    };
+  });
+}
+
+setExercises(mappedExercises);
+
+console.log('Loaded exercises:', mappedExercises);
+
+
         // 3. Map routine exercises and merge existing session values
-        const mappedExercises = routineData.exercises.map((item) => {
-          const exerciseDetails = item.exerciseId;
+        // const mappedExercises = routineData.exercises.map((item) => {
+        //   const exerciseDetails = item.exerciseId;
 
-          const savedExercise = existingSession?.exercises?.find(
-            (saved) =>
-              String(saved.exerciseId) === String(exerciseDetails?._id)
-          );
+        //   const savedExercise = existingSession?.exercises?.find(
+        //     (saved) =>
+        //       String(saved.exerciseId) === String(exerciseDetails?._id)
+        //   );
 
-          const savedSets = savedExercise?.sets || [];
+        //   const savedSets = savedExercise?.sets || [];
 
-          const targetSetCount = Number(item.sets) || 1;
+        //   const targetSetCount = Number(item.sets) || 1;
 
-          const totalSetCount = Math.max(
-            targetSetCount,
-            savedSets.length
-          );
+        //   const totalSetCount = Math.max(
+        //     targetSetCount,
+        //     savedSets.length
+        //   );
 
-          const sets = Array.from(
-            { length: totalSetCount },
-            (_, index) => ({
-              weight: String(savedSets[index]?.weight ?? ''),
-              reps: String(savedSets[index]?.reps ?? ''),
-            })
-          );
+        //   const sets = Array.from(
+        //     { length: totalSetCount },
+        //     (_, index) => ({
+        //       weight: String(savedSets[index]?.weight ?? ''),
+        //       reps: String(savedSets[index]?.reps ?? ''),
+        //     })
+        //   );
 
-          return {
-            exerciseId: exerciseDetails?._id,
-            exerciseName:
-              exerciseDetails?.name ||
-              exerciseDetails?.exerciseName ||
-              'Exercise',
-            muscleGroup: exerciseDetails?.muscleGroup || '',
-            sets,
-            expanded: true,
-          };
-        });
+        //   return {
+        //     exerciseId: exerciseDetails?._id,
+        //     exerciseName:
+        //       exerciseDetails?.name ||
+        //       exerciseDetails?.exerciseName ||
+        //       'Exercise',
+        //     muscleGroup: exerciseDetails?.muscleGroup || '',
+        //     sets,
+        //     expanded: true,
+        //   };
+        // });
 
-        setExercises(mappedExercises);
+        // setExercises(mappedExercises);
 
         console.log('Existing session:', existingSession);
         console.log('Loaded exercises:', mappedExercises);
@@ -403,6 +468,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   // --------------------------------------------------
   // EXPAND / COLLAPSE EXERCISE
   // --------------------------------------------------
+  
 
   const handleToggleExercise = (exerciseIndex) => {
     setExercises((previous) =>
@@ -419,58 +485,8 @@ const LogWorkoutScreen = ({ navigation, route }) => {
   // --------------------------------------------------
 
   const handleAddExercise = () => {
-    const unusedExercises = availableExercises.filter(
-      (available) =>
-        !exercises.some(
-          (selected) => selected.exerciseId === available.exerciseId,
-        ),
-    );
-
-    if (unusedExercises.length === 0) {
-      // Alert.alert('No exercises available', 'All mock exercises have been added.');
-      Toast.show({
-        type: 'error',
-        text1: 'No exercises available',
-
-        text2: 'All mock exercises have been added.',
-        position: 'top',
-        // visibilityTime: 2500,
-      });
-      return;
-    }
-
-    const buttons = unusedExercises.slice(0, 3).map((exercise) => ({
-      text: exercise.exerciseName,
-      onPress: () => {
-        setExercises((previous) => [
-          ...previous,
-          {
-            ...exercise,
-            sets: [{ weight: '', reps: '' }],
-            expanded: true,
-          },
-        ]);
-      },
-    }));
-
-    buttons.push({
-      text: 'Cancel',
-      style: 'cancel',
-    });
-
-    // Alert.alert(
-    //   'Add Exercise',
-    //   'Select an exercise to add',
-    //   buttons,
-    // );
-    Toast.show({
-      type: 'error',
-      text1: 'Add Exercise',
-
-      text2: 'Select an exercise to add',
-      position: 'top',
-      // visibilityTime: 2500,
-    });
+    setShowAddExercise(true)
+    
   };
 
   // --------------------------------------------------
@@ -666,7 +682,32 @@ const LogWorkoutScreen = ({ navigation, route }) => {
     month: 'short',
     year: 'numeric',
   });
+const handleSelectExercise = selected => {
+  const alreadyExists = exercises.some(
+    item => String(item.exerciseId) === String(selected.id)
+  );
 
+  if (alreadyExists) {
+    Alert.alert('Already Added', 'This exercise is already in your workout.');
+    return;
+  }
+
+  setExercises(prev => [
+    ...prev,
+    {
+      exerciseId: selected.id,
+      exerciseName: selected.name,
+      muscleGroup: selected.muscle || '',
+      sets: [
+        {
+          weight: '',
+          reps: '',
+        },
+      ],
+      expanded: true,
+    },
+  ]);
+};
   // --------------------------------------------------
   // UI
   // --------------------------------------------------
@@ -689,13 +730,19 @@ const LogWorkoutScreen = ({ navigation, route }) => {
           />
         }
       >
+        <AddExerciseModal
+          visible={showAddExercise}
+          onClose={() => setShowAddExercise(false)}
+          onSelect={handleSelectExercise}
+          selectedExerciseIds={exercises.map(item => item.exerciseId)}
+        />
         {/* HEADER */}
         <View style={styles.header}>
           <WorkoutHistoryModal
             visible={showhistory}
             onClose={() => setshowhistory(false)}
             exerciseName={historyExerciseName}
-            data={PreviousWorkout }
+            data={PreviousWorkout}
 
           />
           {/* {showhistory&&<TouchableOpacity onPress={()=>{setshowhistory((prev)=>{return !prev})}}><Text style={{color:"black",fontSize:20}}>Show History</Text></TouchableOpacity>} */}
@@ -810,15 +857,15 @@ const LogWorkoutScreen = ({ navigation, route }) => {
                   {exercise.sets.length} Sets
                 </Text>
               </TouchableOpacity>
- 
-            {/* <Ionicons name="time-outline" size={23} color="#172343" /> */}
-            <TouchableOpacity
+
+              {/* <Ionicons name="time-outline" size={23} color="#172343" /> */}
+              <TouchableOpacity
                 style={styles.iconButton}
-                onPress={() => {setshowhistory(true);sethistoryExerciseName(exercise.exerciseName)}}
+                onPress={() => { setshowhistory(true); sethistoryExerciseName(exercise.exerciseName) }}
               >
-               <Ionicons name="time-outline" size={23} color="#172343" /> 
+                <Ionicons name="time-outline" size={23} color="#172343" />
               </TouchableOpacity>
-          
+
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={() => handleToggleExercise(exerciseIndex)}
@@ -964,7 +1011,7 @@ const LogWorkoutScreen = ({ navigation, route }) => {
           ) : (
             <>
               <Ionicons name="checkmark-circle" size={23} color="#FFFFFF" />
-              <Text style={styles.saveButtonText}>{existingSessionId? 'Update Workout' : 'Save Workout'}</Text>
+              <Text style={styles.saveButtonText}>{existingSessionId ? 'Update Workout' : 'Save Workout'}</Text>
             </>
           )}
         </TouchableOpacity>

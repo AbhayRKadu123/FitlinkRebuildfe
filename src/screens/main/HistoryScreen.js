@@ -111,11 +111,31 @@ const HistoryScreen = ({ navigation }) => {
   useEffect(() => {
     fetchWorkoutHistory();
   }, [selectedFilter]);
+  const handleDeleteExercise = async (exerciseId) => {
+  try {
+    const response = await API.delete(`/routines/${exerciseId}`);
+
+    if (response.data.success) {
+      setWorkouts((prev) =>
+        prev.filter(
+          (ele) => String(ele._id) !== String(exerciseId)
+        )
+      );
+
+      console.log("Workout deleted successfully");
+    }
+  } catch (error) {
+    console.log(
+      "Delete workout error:",
+      error.response?.data || error.message
+    );
+  }
+};
 
   const handleWorkoutPress = (workout) => {
     // Alert.alert(workout?._id||"id")
-    navigation.navigate('HistoryWorkoutScreen',{
-      Id:workout?._id
+    navigation.navigate('HistoryWorkoutScreen', {
+      Id: workout?._id
     })
   };
 
@@ -289,6 +309,28 @@ const HistoryScreen = ({ navigation }) => {
               style={styles.workoutCard}
               activeOpacity={0.8}
               onPress={() => handleWorkoutPress(workout)}
+              // onLongPress={()=>{Alert.alert("do u want to delete this ")}}
+              onLongPress={() => {
+                Alert.alert(
+                  "Delete Exercise",
+                  "Are you sure you want to delete this exercise? This action cannot be undone.",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: () => {
+                        // Add your delete function here
+                        handleDeleteExercise(workout._id);
+                      },
+                    },
+                  ],
+                  { cancelable: true }
+                );
+              }}
             >
               <View style={styles.workoutIcon}>
                 <Ionicons

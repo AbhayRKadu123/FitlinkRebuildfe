@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GetUserDetail } from "../../utils/GetUserDetail.js"
 import { removeData } from "../../storage/storage.js"
 import Toast from 'react-native-toast-message';
 const ProfileScreen = ({ navigation }) => {
@@ -26,11 +27,24 @@ const ProfileScreen = ({ navigation }) => {
     calories: '2000 kcal',
     protein: '150g Protein',
   });
+  let [userdetail,setuserdetail]=useState(null)
 
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Edit profile functionality coming soon!');
   };
 
+  const fetchUserDetails = async () => {
+    try {
+      const response = await GetUserDetail();
+      setuserdetail(response.user)
+
+      if (response.success) {
+        console.log('User Details:', response.user);
+      }
+    } catch (error) {
+      console.log('Failed to fetch user details');
+    }
+  };
   const handleLogout = () => {
     removeData('token');
     Toast.show({
@@ -47,6 +61,10 @@ const ProfileScreen = ({ navigation }) => {
   const handleMenuPress = (title) => {
     Alert.alert(title, `${title} functionality coming soon!`);
   };
+  useEffect(() => {
+    fetchUserDetails()
+
+  }, [])
 
   const ProfileStat = ({ icon, value, label, color }) => (
     <View style={styles.statCard}>
@@ -116,8 +134,8 @@ const ProfileScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
+          <Text style={styles.userName}>{userdetail?.name||user.name}</Text>
+          <Text style={styles.userEmail}>{userdetail?.email||user.email}</Text>
 
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>Stronger Every Day</Text>

@@ -113,7 +113,7 @@ const HistoryScreen = ({ navigation }) => {
   }, [selectedFilter]);
   const handleDeleteExercise = async (exerciseId) => {
   try {
-    const response = await API.delete(`/routines/${exerciseId}`);
+    const response = await API.delete(`/routines/history/${exerciseId}`);
 
     if (response.data.success) {
       setWorkouts((prev) =>
@@ -131,6 +131,7 @@ const HistoryScreen = ({ navigation }) => {
     );
   }
 };
+
 
   const handleWorkoutPress = (workout) => {
     // Alert.alert(workout?._id||"id")

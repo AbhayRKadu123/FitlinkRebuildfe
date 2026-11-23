@@ -8,13 +8,14 @@ import {
   Pressable,
   StatusBar,
 } from 'react-native';
+import { useEffect } from 'react';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useState } from 'react';
 import {
   // ScrollView,
   RefreshControl,
 } from 'react-native';
-// import API from '../../api/api'; // Adjust the import path as necessaryR
+import API from '../../api/api'; // Adjust the import path as necessaryR
 import * as Keychain from 'react-native-keychain';
 const recentWorkouts = [
   {
@@ -38,14 +39,41 @@ const recentWorkouts = [
 export default function HomeScreen({ navigation }) {
   // Demo values; replace with user data later.
   const userName = 'Athlete';
-  const hasCompletedWorkoutToday = true;
-  // const hasRecentWorkouts = recentWorkouts.length > 0;
+  const hasCompletedWorkoutToday = false;
+  // const hasRecentWorkouts = recentWorkouts.length > 0;todayActivity?.workouts.length()
+  const [todayActivity, setTodayActivity] = useState({
+    hasCompletedWorkoutToday: false,
+    workoutsCompleted: 0,
+    totalDuration: 0,
+    workouts: [],
+  });
+
+  const fetchTodayActivity = async () => {
+    try {
+      const response = await API.get('/homepagedata/todays-activity');
+
+      if (response.data.success) {
+        setTodayActivity(response.data.data);
+        console.log('Today Activity:', response.data.data);
+      }
+    } catch (error) {
+      console.log(
+        'Fetch Today Activity Error:',
+        error.response?.data || error.message
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchTodayActivity();
+  }, []);
   const onRefresh = async () => {
     setRefreshing(true);
+    fetchTodayActivity()
 
     try {
       // Call your API to reload screen data here
-      
+
       setRefreshing(false);
       await new Promise(resolve => setTimeout(resolve, 1500));
     } catch (error) {
@@ -54,23 +82,45 @@ export default function HomeScreen({ navigation }) {
       setRefreshing(false);
     }
   };
+  const [weeklyActivity, setWeeklyActivity] = useState([]);
+const [weeklyWorkoutCount, setWeeklyWorkoutCount] = useState(0);
+
+const fetchWeeklyActivity = async () => {
+  try {
+    const response = await API.get('/homepagedata/weekly-activity');
+
+    if (response.data.success) {
+      setWeeklyActivity(response.data.data.weeklyActivity);
+      setWeeklyWorkoutCount(response.data.data.weeklyWorkoutCount);
+    }
+  } catch (error) {
+    console.log(
+      'Weekly Activity Error:',
+      error.response?.data || error.message
+    );
+  }
+};
+
+useEffect(() => {
+  fetchWeeklyActivity();
+}, []);
   const hasRecentWorkouts = false;
-    const [refreshing, setRefreshing] = useState(false);
-const weeklyActivity = [
-  { day: 'Thu', completed: true },
-  { day: 'Fri', completed: false },
-  { day: 'Sat', completed: true },
-  { day: 'Sun', completed: false },
-  { day: 'Mon', completed: true },
-  { day: 'Tue', completed: true },
-  { day: 'Wed', completed: false },
-];
+  const [refreshing, setRefreshing] = useState(false);
+  const weeklyActivitys = [
+    { day: 'Thu', completed: true },
+    { day: 'Fri', completed: false },
+    { day: 'Sat', completed: true },
+    { day: 'Sun', completed: false },
+    { day: 'Mon', completed: true },
+    { day: 'Tue', completed: true },
+    { day: 'Wed', completed: false },
+  ];
 
-const weeklyWorkoutCount = weeklyActivity.filter(
-  day => day.completed,
-).length;
+  const weeklyWorkoutCounts = weeklyActivity.filter(
+    day => day.completed,
+  ).length;
 
-const weeklyGoal = 5;
+  const weeklyGoal = 5;
 
   return (
     <View style={styles.screen}>
@@ -79,15 +129,15 @@ const weeklyGoal = 5;
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-          refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                      colors={['#2563EB']}
-                      progressBackgroundColor="#FFFFFF"
-                      size="default"
-                    />
-                  }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2563EB']}
+            progressBackgroundColor="#FFFFFF"
+            size="default"
+          />
+        }
       >
         {/* Greeting and profile avatar */}
         <View style={styles.header}>
@@ -115,7 +165,7 @@ const weeklyGoal = 5;
             <View>
               <Text style={styles.statusLabel}>TODAY'S ACTIVITY</Text>
               <Text style={styles.statusTitle}>
-                {hasCompletedWorkoutToday
+                {todayActivity?.hasCompletedWorkoutToday
                   ? 'Workout completed!'
                   : 'Make today count'}
               </Text>
@@ -123,7 +173,7 @@ const weeklyGoal = 5;
 
             <View style={styles.statusIcon}>
               <Ionicons
-                name={hasCompletedWorkoutToday ? 'checkmark-circle' : 'flash'}
+                name={todayActivity?.hasCompletedWorkoutToday ? 'checkmark-circle' : 'flash'}
                 size={25}
                 color="#FFFFFF"
               />
@@ -131,7 +181,7 @@ const weeklyGoal = 5;
           </View>
 
           <Text style={styles.statusDescription}>
-            {hasCompletedWorkoutToday
+            {todayActivity?.hasCompletedWorkoutToday
               ? 'Great work. Keep building consistency.'
               : 'One session at a time. Start when you are ready.'}
           </Text>
@@ -141,91 +191,91 @@ const weeklyGoal = 5;
               style={[
                 styles.progressFill,
                 {
-                  width: hasCompletedWorkoutToday ? '100%' : '0%',
+                  width: todayActivity?.hasCompletedWorkoutToday ? '100%' : todayActivity?.workoutsCompleted,
                 },
               ]}
             />
           </View>
 
           <Text style={styles.progressLabel}>
-            {hasCompletedWorkoutToday ? '1 workout completed' : 'No workout logged yet'}
+            {todayActivity?.hasCompletedWorkoutToday ? `${todayActivity?.workouts.length} workout completed` : 'No workout logged yet'}
           </Text>
         </View>
         {/* Weekly Activity */}
-<View style={styles.weeklyCard}>
-  <View style={styles.weeklyHeader}>
-    <View>
-      <Text style={styles.weeklyTitle}>Weekly Activity</Text>
-      <Text style={styles.weeklySubtitle}>
-        Your consistency this week
-      </Text>
-    </View>
+        <View style={styles.weeklyCard}>
+          <View style={styles.weeklyHeader}>
+            <View>
+              <Text style={styles.weeklyTitle}>Weekly Activity</Text>
+              <Text style={styles.weeklySubtitle}>
+                Your consistency this week
+              </Text>
+            </View>
 
-    <View style={styles.weeklyIcon}>
-      <Ionicons
-        name="calendar-outline"
-        size={22}
-        color="#2563EB"
-      />
-    </View>
-  </View>
+            <View style={styles.weeklyIcon}>
+              <Ionicons
+                name="calendar-outline"
+                size={22}
+                color="#2563EB"
+              />
+            </View>
+          </View>
 
-  <View style={styles.weeklyStats}>
-    <View>
-      <Text style={styles.weeklyCount}>
-        {weeklyWorkoutCount}
-      </Text>
-      <Text style={styles.weeklyStatLabel}>
-        Workouts this week
-      </Text>
-    </View>
+          <View style={styles.weeklyStats}>
+            <View>
+              <Text style={styles.weeklyCount}>
+                {weeklyWorkoutCount}
+              </Text>
+              <Text style={styles.weeklyStatLabel}>
+                Workouts this week
+              </Text>
+            </View>
 
-    <View style={styles.goalBadge}>
-      <Text style={styles.goalText}>
-        Goal: {weeklyGoal}
-      </Text>
-    </View>
-  </View>
+            <View style={styles.goalBadge}>
+              <Text style={styles.goalText}>
+                Goal: {weeklyGoal}
+              </Text>
+            </View>
+          </View>
 
-  <View style={styles.weeklyProgressTrack}>
-    <View
-      style={[
-        styles.weeklyProgressFill,
-        {
-          width: `${Math.min(
-            (weeklyWorkoutCount / weeklyGoal) * 100,
-            100,
-          )}%`,
-        },
-      ]}
-    />
-  </View>
-
-  <View style={styles.weeklyDays}>
-    {weeklyActivity.map(item => (
-      <View key={item.day} style={styles.weeklyDay}>
-        <View
-          style={[
-            styles.dayIndicator,
-            item.completed && styles.activeDayIndicator,
-          ]}
-        >
-          {item.completed && (
-            <Ionicons
-              name="checkmark"
-              size={14}
-              color="#FFFFFF"
+          <View style={styles.weeklyProgressTrack}>
+            <View
+              style={[
+                styles.weeklyProgressFill,
+                {
+                  width: `${Math.min(
+                    (weeklyWorkoutCount / weeklyGoal) * 100,
+                    100,
+                  )}%`,
+                },
+              ]}
             />
-          )}
-        </View>
+          </View>
 
-        <Text style={styles.weeklyDayLabel}>
-          {item.day}
-        </Text>
-      </View>
-    ))}
-  </View>
-</View>
+          <View style={styles.weeklyDays}>
+            {weeklyActivity.map(item => (
+              <View key={item.day} style={styles.weeklyDay}>
+                <View
+                  style={[
+                    styles.dayIndicator,
+                    item.completed && styles.activeDayIndicator,
+                  ]}
+                >
+                  {item.completed && (
+                    <Ionicons
+                      name="checkmark"
+                      size={14}
+                      color="#FFFFFF"
+                    />
+                  )}
+                </View>
+
+                <Text style={styles.weeklyDayLabel}>
+                  {item.day}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
         {/* Quick actions */}
         <Text style={styles.sectionTitle}>Quick actions</Text>
@@ -619,114 +669,114 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   weeklyCard: {
-  backgroundColor: '#FFFFFF',
-  borderRadius: 20,
-  padding: 18,
-  marginBottom: 27,
-  borderWidth: 1,
-  borderColor: '#E4EAF3',
-},
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 27,
+    borderWidth: 1,
+    borderColor: '#E4EAF3',
+  },
 
-weeklyHeader: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-},
+  weeklyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
 
-weeklyTitle: {
-  fontSize: 17,
-  fontWeight: '800',
-  color: '#172554',
-},
+  weeklyTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#172554',
+  },
 
-weeklySubtitle: {
-  fontSize: 12,
-  color: '#64748B',
-  marginTop: 5,
-},
+  weeklySubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 5,
+  },
 
-weeklyIcon: {
-  width: 42,
-  height: 42,
-  borderRadius: 13,
-  backgroundColor: '#E8F0FF',
-  alignItems: 'center',
-  justifyContent: 'center',
-},
+  weeklyIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: '#E8F0FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
-weeklyStats: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginTop: 20,
-},
+  weeklyStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
 
-weeklyCount: {
-  fontSize: 28,
-  fontWeight: '800',
-  color: '#172554',
-},
+  weeklyCount: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#172554',
+  },
 
-weeklyStatLabel: {
-  fontSize: 12,
-  color: '#64748B',
-  marginTop: 3,
-},
+  weeklyStatLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 3,
+  },
 
-goalBadge: {
-  backgroundColor: '#E8F0FF',
-  paddingHorizontal: 12,
-  paddingVertical: 7,
-  borderRadius: 10,
-},
+  goalBadge: {
+    backgroundColor: '#E8F0FF',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+  },
 
-goalText: {
-  fontSize: 12,
-  fontWeight: '700',
-  color: '#2563EB',
-},
+  goalText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
 
-weeklyProgressTrack: {
-  height: 7,
-  borderRadius: 5,
-  backgroundColor: '#E8EEF7',
-  overflow: 'hidden',
-  marginTop: 16,
-},
+  weeklyProgressTrack: {
+    height: 7,
+    borderRadius: 5,
+    backgroundColor: '#E8EEF7',
+    overflow: 'hidden',
+    marginTop: 16,
+  },
 
-weeklyProgressFill: {
-  height: '100%',
-  borderRadius: 5,
-  backgroundColor: '#2563EB',
-},
+  weeklyProgressFill: {
+    height: '100%',
+    borderRadius: 5,
+    backgroundColor: '#2563EB',
+  },
 
-weeklyDays: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginTop: 18,
-},
+  weeklyDays: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 18,
+  },
 
-weeklyDay: {
-  alignItems: 'center',
-  gap: 7,
-},
+  weeklyDay: {
+    alignItems: 'center',
+    gap: 7,
+  },
 
-dayIndicator: {
-  width: 28,
-  height: 28,
-  borderRadius: 10,
-  backgroundColor: '#EEF2F7',
-  alignItems: 'center',
-  justifyContent: 'center',
-},
+  dayIndicator: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    backgroundColor: '#EEF2F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
-activeDayIndicator: {
-  backgroundColor: '#2563EB',
-},
+  activeDayIndicator: {
+    backgroundColor: '#2563EB',
+  },
 
-weeklyDayLabel: {
-  fontSize: 11,
-  fontWeight: '600',
-  color: '#64748B',
-},
+  weeklyDayLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+  },
 });

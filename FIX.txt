@@ -1,0 +1,15 @@
+Recent workout time in recent workout card
+make notification bell functinal
+make total minutes dynamic in workout history
+make see all in recent worout functional in workout history
+in profile page 
+    add profile photo 
+    total workouts functional 
+    total reps functional
+    total wt lift functional
+    mygoal functional
+    nutrition profile functional
+    app setting functional
+    notification functinal
+    help and support functionall (make send email functional and now make send feed back functional)
+    about fitlink functional

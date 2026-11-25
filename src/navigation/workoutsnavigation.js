@@ -9,7 +9,7 @@ import { View, Text } from 'react-native';
 import EditRoutineScreen from '../screens/main/WorkoutScreenSubScreen/EditRoutineScreen';
 import HistoryWorkoutScreen from "../screens/main/WorkoutScreenSubScreen/HistoryWorkoutScreen"
 import LogWorkoutScreen from "../screens/main/WorkoutScreenSubScreen/LoggWorkoutScreen"
-
+import NotificationPage from '../screens/main/ProfileScreenSubscreens/NotificationPage';
 const Stack = createNativeStackNavigator();
 
 export default function workoutsnavigation() {
@@ -32,6 +32,12 @@ export default function workoutsnavigation() {
       <Stack.Screen
         name="EditRoutine"
         component={EditRoutineScreen}
+      // options={{ headerShown: false }}
+      />
+      {/* NotificationPage */}
+        <Stack.Screen
+        name="NotificationPage"
+        component={NotificationPage}
       // options={{ headerShown: false }}
       />
     

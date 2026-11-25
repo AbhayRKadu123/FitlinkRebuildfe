@@ -13,7 +13,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API = axios.create({
-    baseURL: 'http://172.18.140.96:5000/api',
+    baseURL: 'http://10.78.15.96:5000/api',
     // baseURL:'https://fitlinkrebuildbackend.onrender.com/api',
     headers: {
         'Content-Type': 'application/json',

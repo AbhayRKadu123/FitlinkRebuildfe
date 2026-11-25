@@ -370,7 +370,7 @@ const handleDeleteRoutine = (routineId) => {
 
                     <Pressable
                         style={styles.headerIcon}
-                        onPress={() => console.log('Notifications')}
+                        onPress={() =>  navigation.navigate("NotificationPage")}
                     >
                         <Ionicons
                             name="notifications-outline"

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GetUserDetail } from "../../utils/GetUserDetail.js"
 import { removeData } from "../../storage/storage.js"
 import Toast from 'react-native-toast-message';
+import NotificationPage from './ProfileScreenSubscreens/NotificationPage.js';
 const ProfileScreen = ({ navigation }) => {
   // Sample profile data for now
   const [user] = useState({
@@ -27,7 +28,7 @@ const ProfileScreen = ({ navigation }) => {
     calories: '2000 kcal',
     protein: '150g Protein',
   });
-  let [userdetail,setuserdetail]=useState(null)
+  let [userdetail, setuserdetail] = useState(null)
 
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Edit profile functionality coming soon!');
@@ -59,7 +60,29 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleMenuPress = (title) => {
-    Alert.alert(title, `${title} functionality coming soon!`);
+    if (title == "About FitLink") {
+      navigation.navigate("AboutFitlink")
+
+    } else if (title == "Help & Support") {
+      navigation.navigate("HelpAndSupport")
+
+      // HelpAndSupport
+    }
+    else if (title == 'Notifications') {
+      // setting
+      navigation.navigate("NotificationPage")
+
+
+
+    } else if (title == 'App Settings') {
+      // NotificationPage
+      navigation.navigate("setting")
+
+
+    }
+    else {
+      Alert.alert(title, `${title} functionality coming soon!`);
+    }
   };
   useEffect(() => {
     fetchUserDetails()
@@ -134,8 +157,8 @@ const ProfileScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.userName}>{userdetail?.name||user.name}</Text>
-          <Text style={styles.userEmail}>{userdetail?.email||user.email}</Text>
+          <Text style={styles.userName}>{userdetail?.name || user.name}</Text>
+          <Text style={styles.userEmail}>{userdetail?.email || user.email}</Text>
 
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>Stronger Every Day</Text>

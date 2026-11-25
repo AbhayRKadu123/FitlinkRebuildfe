@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import API from '../../api/api'; // Adjust the import path as necessaryR
 import * as Keychain from 'react-native-keychain';
-const recentWorkouts = [
+const recentWorkou= [
   {
     id: '1',
     title: 'Push Day',
@@ -39,7 +39,7 @@ const recentWorkouts = [
 export default function HomeScreen({ navigation }) {
   // Demo values; replace with user data later.
   const userName = 'Athlete';
-  const hasCompletedWorkoutToday = false;
+  const hasCompletedWorkoutToday = true;
   // const hasRecentWorkouts = recentWorkouts.length > 0;todayActivity?.workouts.length()
   const [todayActivity, setTodayActivity] = useState({
     hasCompletedWorkoutToday: false,
@@ -70,6 +70,7 @@ export default function HomeScreen({ navigation }) {
   const onRefresh = async () => {
     setRefreshing(true);
     fetchTodayActivity()
+    fetchRecentWorkouts();
 
     try {
       // Call your API to reload screen data here
@@ -100,11 +101,28 @@ const fetchWeeklyActivity = async () => {
     );
   }
 };
+const [recentWorkouts, setRecentWorkouts] = useState([]);
+
+const fetchRecentWorkouts = async () => {
+  try {
+    const response = await API.get('/homepagedata/recent-workouts');
+
+    if (response.data.success) {
+      setRecentWorkouts(response.data.data);
+    }
+  } catch (error) {
+    console.log(
+      'Recent Workouts Error:',
+      error.response?.data || error.message
+    );
+  }
+};
 
 useEffect(() => {
   fetchWeeklyActivity();
+  fetchRecentWorkouts();
 }, []);
-  const hasRecentWorkouts = false;
+  const hasRecentWorkouts = true;
   const [refreshing, setRefreshing] = useState(false);
   const weeklyActivitys = [
     { day: 'Thu', completed: true },
@@ -329,7 +347,7 @@ useEffect(() => {
           </Pressable>
         </View>
 
-        {hasRecentWorkouts ? (
+        {recentWorkouts.length>0 ? (
           recentWorkouts.map(workout => (
             <Pressable
               key={workout.id}
